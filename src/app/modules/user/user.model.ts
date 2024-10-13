@@ -36,7 +36,7 @@ const userSchema: Schema = new Schema<TUser>(
 );
 
 // Hashing password before save to DB
-userSchema.pre('save', async function (next:) {
+userSchema.pre('save', async function (next) {
   if (typeof this.password === 'string') {
     this.password = await bcrypt.hash(
       this.password,
@@ -62,7 +62,7 @@ userSchema.pre('findOneAndUpdate', function (next) {
 
 // check user exist or not
 userSchema.statics.isUserExistsByEmail = async function (email: string) {
-  return await User.findOne({ email }).select('+password');
+  return await UserModel.findOne({ email }).select('+password');
 };
 
 // check password wrong or not

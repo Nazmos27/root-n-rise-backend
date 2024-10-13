@@ -5,7 +5,7 @@ import AppError from '../errors/AppError';
 import httpStatus from 'http-status';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../config';
-import { User } from '../modules/user/user.model';
+import { UserModel } from '../modules/user/user.model';
 
 const checkAuth = (...requiredRoles: TUserRole[]) => {
   return handleAsync(
@@ -25,7 +25,7 @@ const checkAuth = (...requiredRoles: TUserRole[]) => {
       ) as JwtPayload;
       const { email, role } = decoded;
 
-      const user = await User.isUserExistsByEmail(email);
+      const user = await UserModel.isUserExistsByEmail(email);
       if (!user) {
         throw new AppError(httpStatus.NOT_FOUND, 'This user is not found !');
       }
