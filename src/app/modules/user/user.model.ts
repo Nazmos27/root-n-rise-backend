@@ -20,12 +20,12 @@ const userSchema: Schema = new Schema<TUser>(
     profilePhoto: {
       type: String,
       default:
-        'https://res.cloudinary.com/dbwftcxvx/image/upload/v1727985302/image_8_sdrdqj.jpg',
+        'https://res.cloudinary.com/dtx8rnmsr/image/upload/v1730274143/anonymous-avatar.jpg',
     },
     coverPhoto: {
       type: String,
       default:
-        'https://res.cloudinary.com/dbwftcxvx/image/upload/v1727985302/image_9_k8zz66.jpg',
+        'https://res.cloudinary.com/dtx8rnmsr/image/upload/v1730274422/anonymous-cover.jpg',
     },
     isDeleted: { type: Boolean, default: false },
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
