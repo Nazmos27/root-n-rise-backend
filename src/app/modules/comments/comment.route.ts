@@ -9,16 +9,12 @@ const router = express.Router();
 
 router.post(
   '/create',
-  checkAuth(USER_ROLE.user),
+  checkAuth(USER_ROLE.user, USER_ROLE.admin),
   validateRequest(commentSchema.createCommentSchema),
   CommentController.createComment,
 );
 
-router.get(
-  '/:postId',
-  checkAuth(USER_ROLE.user, USER_ROLE.admin),
-  CommentController.getAllComments,
-);
+router.get('/:postId', CommentController.getAllComments);
 
 router.delete(
   '/:commentId',
@@ -28,12 +24,12 @@ router.delete(
 
 router.post(
   '/vote/:commentId',
-  checkAuth(USER_ROLE.user),
+  checkAuth(USER_ROLE.user, USER_ROLE.admin),
   CommentController.voteOnComment,
 );
 router.patch(
   '/update/:commentId',
-  checkAuth(USER_ROLE.user),
+  checkAuth(USER_ROLE.user, USER_ROLE.admin),
   validateRequest(commentSchema.updateCommentSchema),
   CommentController.updateComment,
 );

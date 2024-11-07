@@ -18,19 +18,29 @@ router.post(
   PostController.createPost,
 );
 
+router.get('/', PostController.getAllPosts);
+
 router.get(
-  '/',
+  '/user/:userId',
   checkAuth(USER_ROLE.user, USER_ROLE.admin),
-  PostController.getAllPosts,
+  PostController.getUserPost,
 );
 
 router.get(
+  '/get-monthly-posts',
+  checkAuth(USER_ROLE.admin),
+  PostController.getPostsByMonth,
+);
+
+router.get('/:postId', PostController.getSinglePost);
+router.get('/photos/latest-photos', PostController.getLatestPhotos);
+
+router.delete(
   '/:postId',
   checkAuth(USER_ROLE.user, USER_ROLE.admin),
-  PostController.getSinglePost,
+  PostController.deleteSinglePost,
 );
 
-router.delete('/:postId', PostController.deleteSinglePost);
 router.patch(
   '/update-post/:postId',
   checkAuth(USER_ROLE.user, USER_ROLE.admin),
@@ -38,4 +48,5 @@ router.patch(
   parseBody,
   PostController.updatePost,
 );
+
 export const PostRoutes = router;

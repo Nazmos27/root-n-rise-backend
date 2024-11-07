@@ -1,10 +1,9 @@
 import handleAsync from '../../utils/handleAsync';
-import { Request, Response } from 'express';
 import responseSender from '../../utils/responseSender';
 import httpStatus from 'http-status';
 import { FollowerService } from './followers.service';
 
-const followUser = handleAsync(async (req:Request, res:Response) => {
+const followUser = handleAsync(async (req, res) => {
   const { userId, targetUserId } = req.body;
 
   await FollowerService.followUser(userId, targetUserId);
@@ -17,7 +16,7 @@ const followUser = handleAsync(async (req:Request, res:Response) => {
   });
 });
 
-const unfollowUser = handleAsync(async (req:Request, res:Response) => {
+const unfollowUser = handleAsync(async (req, res) => {
   const { userId, targetUserId } = req.body;
 
   await FollowerService.unfollowUser(userId, targetUserId);
@@ -30,7 +29,7 @@ const unfollowUser = handleAsync(async (req:Request, res:Response) => {
   });
 });
 
-const getFollowersAndFollowing = handleAsync(async (req:Request, res:Response) => {
+const getFollowersAndFollowing = handleAsync(async (req, res) => {
   const { userId } = req.params;
   const result = await FollowerService.getFollowersAndFollowing(userId);
 

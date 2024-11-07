@@ -1,16 +1,16 @@
 import httpStatus from 'http-status';
 import AppError from '../../errors/AppError';
-import { UserModel } from '../user/user.model';
-import { PostModel } from '../post/post.model';
+import { User } from '../user/user.model';
+import { Post } from '../post/post.model';
 import { TComment } from './comment.interface';
-import { CommentModel } from './comment.model';
+import { Comment } from './comment.mode';
 import { Types } from 'mongoose';
 import QueryBuilder from '../../builder/QueryBuilder';
 
 const createComment = async (payload: TComment) => {
   // Check if user and post exist
-  const user = await UserModel.findById(payload.user);
-  const post = await PostModel.findById(payload.post);
+  const user = await User.findById(payload.user);
+  const post = await Post.findById(payload.post);
 
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, 'User not found');
@@ -20,20 +20,28 @@ const createComment = async (payload: TComment) => {
     throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
   }
 
-  const newComment = await CommentModel.create(payload);
+  const newComment = await Comment.create(payload);
+
+  //post commentCount increase
+  post.commentCount += 1;
+  await post.save();
+
   return newComment;
 };
 
 const updateComment = async (commentId: string, payload: Partial<TComment>) => {
-  const comment = await CommentModel.findById(commentId);
+  const comment = await Comment.findById(commentId);
 
   if (!comment) {
     throw new AppError(httpStatus.NOT_FOUND, 'Comment not found');
   }
 
-  const updatedComment = await CommentModel.findByIdAndUpdate(commentId, payload, {
+  const updatedComment = await Comment.findByIdAndUpdate(commentId, payload, {
     new: true,
-  });
+  })
+    .populate('user')
+    .populate('downVoters')
+    .populate('upVoters');
   return updatedComment;
 };
 
@@ -41,8 +49,11 @@ const getAllCommentsFromDB = async (
   query: Record<string, unknown>,
   postId: string,
 ) => {
-  const allPostsQuery = new QueryBuilder(
-    CommentModel.find({ isDeleted: false, post: postId }),
+  const allCommentsOfPostQuery = new QueryBuilder(
+    Comment.find({ isDeleted: false, post: postId })
+      .populate('user')
+      .populate('upVoters')
+      .populate('downVoters'),
     query,
   )
     .search(['comment'])
@@ -50,9 +61,9 @@ const getAllCommentsFromDB = async (
     .sort()
     .paginate()
     .fields();
+  const meta = await allCommentsOfPostQuery.countTotal();
+  const result = await allCommentsOfPostQuery.modelQuery;
 
-  const meta = await allPostsQuery.countTotal();
-  const result = await allPostsQuery.modelQuery;
   return {
     meta,
     result,
@@ -65,7 +76,7 @@ const voteOnComment = async (
   userId: string,
   voteType: 'upvote' | 'downvote',
 ) => {
-  const comment = await CommentModel.findById(commentId);
+  const comment = await Comment.findById(commentId);
   const userObjectId = new Types.ObjectId(userId);
 
   if (!comment) {
@@ -116,7 +127,7 @@ const voteOnComment = async (
 };
 
 const deleteSingleCommentFromDB = async (commentId: string) => {
-  const result = await CommentModel.findByIdAndUpdate(
+  const result = await Comment.findByIdAndUpdate(
     commentId,
     {
       isDeleted: true,
@@ -125,6 +136,10 @@ const deleteSingleCommentFromDB = async (commentId: string) => {
       new: true,
     },
   );
+  // Decrease comment count from post
+  await Post.findByIdAndUpdate(result?.post, {
+    $inc: { commentCount: -1 },
+  });
 
   return result;
 };

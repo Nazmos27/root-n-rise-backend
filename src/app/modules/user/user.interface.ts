@@ -14,11 +14,15 @@ export type TUser = {
   phone: string;
   address: string;
   plan: 'basic' | 'premium';
-  planValidity?: string;
+  planValidity?: Date;
   profilePhoto?: string;
   coverPhoto?: string;
   bio?: string;
+  passwordChangedAt?: Date;
   status: 'active' | 'blocked';
+  isOnline: boolean;
+  totalUpvoteGained: number;
+  totalDownvoteGained: number;
   isDeleted: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -35,4 +39,9 @@ export interface IUserModel extends Model<TUser> {
     plainTextPassword: string,
     hashedPassword: string,
   ): Promise<HydratedDocument<TUser>>;
+
+  isJWTIssuedBeforePasswordChanged(
+    passwordChangedTimestamp: Date,
+    jwtIssuedTimestamp: number,
+  ): boolean;
 }

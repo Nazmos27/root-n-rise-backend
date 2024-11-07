@@ -18,7 +18,6 @@ const createComment = handleAsync(async (req, res) => {
 const getAllComments = handleAsync(async (req, res) => {
   const { postId } = req.params;
   const result = await CommentServices.getAllCommentsFromDB(req.query, postId);
-
   responseSender(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -33,7 +32,6 @@ const updateComment = handleAsync(async (req, res) => {
   const commentData = req.body;
 
   const result = await CommentServices.updateComment(commentId, commentData);
-
   responseSender(res, {
     success: true,
     statusCode: httpStatus.OK,
@@ -44,6 +42,7 @@ const updateComment = handleAsync(async (req, res) => {
 
 const deleteSingleComment = handleAsync(async (req, res) => {
   const { commentId } = req.params;
+
   const result = await CommentServices.deleteSingleCommentFromDB(commentId);
   responseSender(res, {
     statusCode: httpStatus.OK,

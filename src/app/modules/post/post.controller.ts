@@ -8,7 +8,6 @@ const createPost = handleAsync(async (req, res) => {
   const images = req.files as Express.Multer.File[];
 
   const postData = req.body;
-
   if (images?.length) {
     postData.postPhotos = images.map((image) => image.path);
   }
@@ -33,9 +32,20 @@ const getAllPosts = handleAsync(async (req, res) => {
   });
 });
 
+const getUserPost = handleAsync(async (req, res) => {
+  const { userId } = req.params;
+  const result = await PostServices.getUserPostFromDB(userId);
+  responseSender(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Posts are retrieved successfully',
+    data: result,
+  });
+});
 const getSinglePost = handleAsync(async (req, res) => {
   const { postId } = req.params;
   const result = await PostServices.getSinglePostFromDB(postId);
+
   responseSender(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -75,10 +85,35 @@ const deleteSinglePost = handleAsync(async (req, res) => {
   });
 });
 
+// Controller to get posts by month
+const getPostsByMonth = handleAsync(async (req, res) => {
+  const result = await PostServices.getPostsByMonthFromDB();
+  responseSender(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Posts by Month retrieved successfully',
+    data: result,
+  });
+});
+
+const getLatestPhotos = handleAsync(async (req, res) => {
+  const result = await PostServices.getLatestPhotosFromDB();
+
+  responseSender(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Latest photos retrieved successfully',
+    data: result,
+  });
+});
+
 export const PostController = {
   createPost,
+  getLatestPhotos,
   updatePost,
+  getUserPost,
   deleteSinglePost,
   getSinglePost,
+  getPostsByMonth,
   getAllPosts,
 };

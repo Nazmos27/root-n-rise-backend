@@ -1,62 +1,83 @@
 import httpStatus from 'http-status';
 import AppError from '../../errors/AppError';
-import { PostModel } from '../post/post.model';
-import { VoterModel } from './voters.model';
+import { Post } from '../post/post.model';
+import { Voter } from './voters.model';
+import { User } from '../user/user.model';
 
 const upvotePost = async (userId: string, postId: string) => {
-  // Check if the post exists
-  const post = await PostModel.findById(postId);
+  const post = await Post.findById(postId).populate('user');
   if (!post) {
     throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
   }
 
-  // Check if the user has already upvoted the post
-  const existingVote = await VoterModel.findOne({ user: userId, post: postId });
+  const postOwner = post.user;
+
+  // Check if the user has already voted
+  const existingVote = await Voter.findOne({ user: userId, post: postId });
+
   if (existingVote) {
     if (existingVote.type === 'upvote') {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        'You have already upvoted this post',
-      );
+      // User has already upvoted, no further action needed
+      return null;
     } else if (existingVote.type === 'downvote') {
-      // Remove downvote
-      await VoterModel.findByIdAndDelete(existingVote._id);
+      // Remove the downvote and switch to upvote
+      await Voter.findByIdAndDelete(existingVote._id);
       post.downvoteCount -= 1;
+
+      await User.findByIdAndUpdate(postOwner._id, {
+        $inc: { totalDownvoteGained: -1 }, // Decrease downvote count for post owner
+      });
     }
   }
 
   // Add upvote
-  await VoterModel.create({ user: userId, post: postId, type: 'upvote' });
+  await Voter.create({ user: userId, post: postId, type: 'upvote' });
   post.upvoteCount += 1;
+
+  // Increase post owner's upvote count
+  await User.findByIdAndUpdate(postOwner._id, {
+    $inc: { totalUpvoteGained: 1 },
+  });
+
   await post.save();
 
   return post;
 };
 
 const downvotePost = async (userId: string, postId: string) => {
-  const post = await PostModel.findById(postId);
+  const post = await Post.findById(postId).populate('user');
   if (!post) {
     throw new AppError(httpStatus.NOT_FOUND, 'Post not found');
   }
 
-  // Check if the user has already downvoted the post
-  const existingVote = await VoterModel.findOne({ user: userId, post: postId });
+  const postOwner = post.user;
+
+  const existingVote = await Voter.findOne({ user: userId, post: postId });
+
   if (existingVote) {
     if (existingVote.type === 'downvote') {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        'You have already downvoted this post',
-      );
+      // User has already downvoted, no further action needed
+      return null;
     } else if (existingVote.type === 'upvote') {
-      // Remove upvote
-      await VoterModel.findByIdAndDelete(existingVote._id);
+      // Remove the upvote and switch to downvote
+      await Voter.findByIdAndDelete(existingVote._id);
       post.upvoteCount -= 1;
+
+      await User.findByIdAndUpdate(postOwner._id, {
+        $inc: { totalUpvoteGained: -1 }, // Decrease upvote count for post owner
+      });
     }
   }
 
   // Add downvote
-  await VoterModel.create({ user: userId, post: postId, type: 'downvote' });
+  await Voter.create({ user: userId, post: postId, type: 'downvote' });
   post.downvoteCount += 1;
+
+  // Increase post owner's downvote count
+  await User.findByIdAndUpdate(postOwner._id, {
+    $inc: { totalDownvoteGained: 1 },
+  });
+
   await post.save();
 
   return post;
@@ -64,10 +85,10 @@ const downvotePost = async (userId: string, postId: string) => {
 
 const getAllVotersOfAPost = async (postId: string) => {
   // Find all upvoters and downvoters for the post
-  const upVoters = await VoterModel.find({ post: postId, type: 'upvote' }).populate(
+  const upVoters = await Voter.find({ post: postId, type: 'upvote' }).populate(
     'user',
   );
-  const downVoters = await VoterModel.find({
+  const downVoters = await Voter.find({
     post: postId,
     type: 'downvote',
   }).populate('user');

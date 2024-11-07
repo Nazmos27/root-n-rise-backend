@@ -15,20 +15,24 @@ const userSchema: Schema = new Schema<TUser>(
     phone: { type: String, required: true },
     address: { type: String, required: true },
     plan: { type: String, enum: ['basic', 'premium'], default: 'basic' },
-    planValidity: { type: String, default: '' },
+    planValidity: { type: Date, default: new Date() },
     bio: { type: String, default: '' },
     profilePhoto: {
       type: String,
       default:
-        'https://res.cloudinary.com/dtx8rnmsr/image/upload/v1730274143/anonymous-avatar.jpg',
+        'https://res.cloudinary.com/dbwftcxvx/image/upload/v1727985302/image_8_sdrdqj.jpg',
     },
     coverPhoto: {
       type: String,
       default:
-        'https://res.cloudinary.com/dtx8rnmsr/image/upload/v1730274422/anonymous-cover.jpg',
+        'https://res.cloudinary.com/dbwftcxvx/image/upload/v1727985302/image_9_k8zz66.jpg',
     },
+    isOnline: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
+    totalUpvoteGained: { type: Number, default: 0 },
+    totalDownvoteGained: { type: Number, default: 0 },
+    passwordChangedAt: { type: Date },
   },
   {
     timestamps: true,
@@ -62,7 +66,7 @@ userSchema.pre('findOneAndUpdate', function (next) {
 
 // check user exist or not
 userSchema.statics.isUserExistsByEmail = async function (email: string) {
-  return await UserModel.findOne({ email }).select('+password');
+  return await User.findOne({ email }).select('+password');
 };
 
 // check password wrong or not
@@ -77,4 +81,13 @@ userSchema.post('save', function (doc, next) {
   doc.password = '';
   next();
 });
-export const UserModel = model<TUser, IUserModel>('User', userSchema);
+
+userSchema.statics.isJWTIssuedBeforePasswordChanged = function (
+  passwordChangedTimestamp: Date,
+  jwtIssuedTimestamp: number,
+) {
+  const passwordChangedTime =
+    new Date(passwordChangedTimestamp).getTime() / 1000;
+  return passwordChangedTime > jwtIssuedTimestamp;
+};
+export const User = model<TUser, IUserModel>('User', userSchema);

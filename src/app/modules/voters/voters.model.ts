@@ -7,4 +7,4 @@ const VoterSchema: Schema<TVoter> = new Schema<TVoter>({
   type: { type: String, enum: ['upvote', 'downvote'], required: true },
 });
 
-export const VoterModel = model<TVoter>('Voter', VoterSchema);
+export const Voter = model<TVoter>('Voter', VoterSchema);
